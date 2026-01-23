@@ -1,6 +1,5 @@
 # ECONS_5140
-This is for assignment documentation and submission
-
+This course provides an applied introduction to modern forecasting and causal inference methods used in economics, policy analysis, and industry analytics. Students will learn to implement these methods in Python, work with real-world datasets, and communicate empirical findings through code, written reports, and presentations.
 # Course Learning Outcomes
 By the end of the course, students will be able to:
 
