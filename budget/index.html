@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budget Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --surface-hover: #243044;
+      --border: #2d3a4d;
+      --text: #e6edf3;
+      --text-muted: #8b9cb3;
+      --accent: #3b82f6;
+      --accent-soft: rgba(59, 130, 246, 0.15);
+      --income: #22c55e;
+      --income-soft: rgba(34, 197, 94, 0.15);
+      --expense: #ef4444;
+      --expense-soft: rgba(239, 68, 68, 0.15);
+      --balance-positive: #22c55e;
+      --balance-negative: #ef4444;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .app {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    header {
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: var(--shadow);
+    }
+
+    .card-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .card-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .card.income .card-value { color: var(--income); }
+    .card.expenses .card-value { color: var(--expense); }
+    .card.balance .card-value { color: var(--text); }
+
+    .card.balance.positive .card-value { color: var(--balance-positive); }
+    .card.balance.negative .card-value { color: var(--balance-negative); }
+
+    .sections {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 700px) {
+      .sections { grid-template-columns: 1fr; }
+    }
+
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: var(--shadow);
+    }
+
+    .section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section h2 .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .section.income-section .dot { background: var(--income); }
+    .section.expenses-section .dot { background: var(--expense); }
+
+    .form-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .form-row input,
+    .form-row select {
+      flex: 1;
+      min-width: 0;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+
+    .form-row input:focus,
+    .form-row select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-soft);
+    }
+
+    .form-row input::placeholder {
+      color: var(--text-muted);
+    }
+
+    button {
+      padding: 0.6rem 1rem;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    button:active { transform: scale(0.98); }
+
+    .btn-add {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-add:hover {
+      background: #2563eb;
+    }
+
+    .btn-add.income-btn { background: var(--income); }
+    .btn-add.income-btn:hover { background: #16a34a; }
+    .btn-add.expense-btn { background: var(--expense); }
+    .btn-add.expense-btn:hover { background: #dc2626; }
+
+    .btn-remove {
+      background: transparent;
+      color: var(--text-muted);
+      padding: 0.35rem 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    .btn-remove:hover {
+      background: var(--expense-soft);
+      color: var(--expense);
+    }
+
+    .entries {
+      list-style: none;
+    }
+
+    .entry {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: var(--radius-sm);
+      margin-bottom: 0.4rem;
+      background: var(--bg);
+      border: 1px solid transparent;
+    }
+
+    .entry:hover {
+      background: var(--surface-hover);
+    }
+
+    .entry-desc {
+      flex: 1;
+      min-width: 0;
+      font-size: 0.95rem;
+    }
+
+    .entry-category {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    .entry-amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    .entry.income .entry-amount { color: var(--income); }
+    .entry.expense .entry-amount { color: var(--expense); }
+
+    .entry-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .empty-state {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      padding: 1.5rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Budget Tracker</h1>
+    </header>
+
+    <div class="summary">
+      <div class="card income">
+        <div class="card-label">Total Income</div>
+        <div class="card-value" id="totalIncome">$0.00</div>
+      </div>
+      <div class="card expenses">
+        <div class="card-label">Total Expenses</div>
+        <div class="card-value" id="totalExpenses">$0.00</div>
+      </div>
+      <div class="card balance" id="balanceCard">
+        <div class="card-label">Balance</div>
+        <div class="card-value" id="balance">$0.00</div>
+      </div>
+    </div>
+
+    <div class="sections">
+      <section class="section income-section">
+        <h2><span class="dot"></span> Income</h2>
+        <div class="form-row">
+          <input type="text" id="incomeDesc" placeholder="Description" aria-label="Income description">
+          <input type="number" id="incomeAmount" placeholder="Amount" min="0" step="0.01" aria-label="Income amount">
+          <button type="button" class="btn-add income-btn" id="addIncome">Add</button>
+        </div>
+        <ul class="entries" id="incomeList"></ul>
+      </section>
+
+      <section class="section expenses-section">
+        <h2><span class="dot"></span> Expenses</h2>
+        <div class="form-row">
+          <input type="text" id="expenseDesc" placeholder="Description" aria-label="Expense description">
+          <input type="number" id="expenseAmount" placeholder="Amount" min="0" step="0.01" aria-label="Expense amount">
+          <select id="expenseCategory" aria-label="Category">
+            <option value="Food">Food</option>
+            <option value="Transport">Transport</option>
+            <option value="Housing">Housing</option>
+            <option value="Utilities">Utilities</option>
+            <option value="Healthcare">Healthcare</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <button type="button" class="btn-add expense-btn" id="addExpense">Add Expense</button>
+        </div>
+        <ul class="entries" id="expenseList"></ul>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'budget-tracker-data';
+
+    const defaultData = () => ({
+      income: [],
+      expenses: []
+    });
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return {
+            income: Array.isArray(parsed.income) ? parsed.income : [],
+            expenses: Array.isArray(parsed.expenses) ? parsed.expenses : []
+          };
+        }
+      } catch (e) {
+        console.warn('Failed to load budget data', e);
+      }
+      return defaultData();
+    }
+
+    function saveData(data) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.warn('Failed to save budget data', e);
+      }
+    }
+
+    function formatMoney(n) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(n);
+    }
+
+    let state = loadData();
+
+    function addIncome(desc, amount) {
+      const n = parseFloat(amount);
+      if (!desc.trim() || isNaN(n) || n <= 0) return;
+      state.income.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        description: desc.trim(),
+        amount: n
+      });
+      saveData(state);
+      render();
+    }
+
+    function addExpense(desc, amount, category) {
+      const n = parseFloat(amount);
+      if (!desc.trim() || isNaN(n) || n <= 0) return;
+      state.expenses.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        description: desc.trim(),
+        amount: n,
+        category: category || 'Other'
+      });
+      saveData(state);
+      render();
+    }
+
+    function removeIncome(id) {
+      state.income = state.income.filter(i => i.id !== id);
+      saveData(state);
+      render();
+    }
+
+    function removeExpense(id) {
+      state.expenses = state.expenses.filter(e => e.id !== id);
+      saveData(state);
+      render();
+    }
+
+    function getTotals() {
+      const totalIncome = state.income.reduce((s, i) => s + i.amount, 0);
+      const totalExpenses = state.expenses.reduce((s, e) => s + e.amount, 0);
+      const balance = totalIncome - totalExpenses;
+      return { totalIncome, totalExpenses, balance };
+    }
+
+    function render() {
+      const { totalIncome, totalExpenses, balance } = getTotals();
+
+      document.getElementById('totalIncome').textContent = formatMoney(totalIncome);
+      document.getElementById('totalExpenses').textContent = formatMoney(totalExpenses);
+      document.getElementById('balance').textContent = formatMoney(balance);
+
+      const balanceCard = document.getElementById('balanceCard');
+      balanceCard.classList.remove('positive', 'negative');
+      if (balance > 0) balanceCard.classList.add('positive');
+      if (balance < 0) balanceCard.classList.add('negative');
+
+      const incomeList = document.getElementById('incomeList');
+      incomeList.innerHTML = state.income.length === 0
+        ? '<li class="empty-state">No income entries yet.</li>'
+        : state.income.map(i => `
+            <li class="entry income">
+              <div>
+                <div class="entry-desc">${escapeHtml(i.description)}</div>
+              </div>
+              <span class="entry-amount">${formatMoney(i.amount)}</span>
+              <div class="entry-actions">
+                <button type="button" class="btn-remove" data-id="${escapeHtml(i.id)}" aria-label="Remove">✕</button>
+              </div>
+            </li>
+          `).join('');
+
+      const expenseList = document.getElementById('expenseList');
+      expenseList.innerHTML = state.expenses.length === 0
+        ? '<li class="empty-state">No expenses yet.</li>'
+        : state.expenses.map(e => `
+            <li class="entry expense">
+              <div>
+                <div class="entry-desc">${escapeHtml(e.description)}</div>
+                <div class="entry-category">${escapeHtml(e.category)}</div>
+              </div>
+              <span class="entry-amount">−${formatMoney(e.amount)}</span>
+              <div class="entry-actions">
+                <button type="button" class="btn-remove" data-id="${escapeHtml(e.id)}" aria-label="Remove">✕</button>
+              </div>
+            </li>
+          `).join('');
+
+      incomeList.querySelectorAll('.btn-remove').forEach(btn => {
+        btn.addEventListener('click', () => removeIncome(btn.dataset.id));
+      });
+      expenseList.querySelectorAll('.btn-remove').forEach(btn => {
+        btn.addEventListener('click', () => removeExpense(btn.dataset.id));
+      });
+    }
+
+    function escapeHtml(s) {
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    document.getElementById('addIncome').addEventListener('click', () => {
+      const desc = document.getElementById('incomeDesc');
+      const amount = document.getElementById('incomeAmount');
+      addIncome(desc.value, amount.value);
+      desc.value = '';
+      amount.value = '';
+      desc.focus();
+    });
+
+    document.getElementById('incomeAmount').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('addIncome').click();
+    });
+
+    document.getElementById('addExpense').addEventListener('click', () => {
+      const desc = document.getElementById('expenseDesc');
+      const amount = document.getElementById('expenseAmount');
+      const category = document.getElementById('expenseCategory').value;
+      addExpense(desc.value, amount.value, category);
+      desc.value = '';
+      amount.value = '';
+      desc.focus();
+    });
+
+    document.getElementById('expenseAmount').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('addExpense').click();
+    });
+
+    render();
+  </script>
+</body>
+</html>
